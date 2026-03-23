@@ -28,7 +28,11 @@ class Plugins extends Route {
 					'required' => true,
 					'type' => 'string',
 					'description' => 'The plugin slug (for type "slug") or URL (for type "url").',
-					'sanitize_callback' => 'sanitize_text_field',
+					'sanitize_callback' => static function ( $value, $request ) {
+						$type = $request->get_param( 'type' );
+
+						return 'slug' === $type ? sanitize_text_field( $value ) : esc_url_raw( $value );
+					},
 				],
 			],
 		] );
