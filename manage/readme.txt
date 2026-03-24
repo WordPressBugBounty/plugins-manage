@@ -4,7 +4,7 @@ Contributors: elemntor
 Tags: elementor, manage, websites, admin, monitoring, performance, updates
 Requires at least: 6.6
 Tested up to: 6.9
-Stable tag: 1.0.1
+Stable tag: 1.0.2
 Requires PHP: 7.4
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -68,6 +68,9 @@ All communication is encrypted and verified through signed tokens to ensure only
 3. Monitoring tab with uptime and performance info
 
 ## Changelog
+
+### 1.0.2
+- Improved support for installing plugins from ZIP files.
 
 ### 1.0.1
 - Handle license state before displaying the option to connect.

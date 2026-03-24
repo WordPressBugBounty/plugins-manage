@@ -42,6 +42,9 @@ class Module extends Module_Base {
 			'connect_mode' => Config::CONNECT_MODE,
 			'plugin_slug' => Config::PLUGIN_SLUG,
 		] );
+
+		// Disable license check for Manage (Free version)
+		add_filter( 'elementor_one/' . Config::APP_PREFIX . '_license_check_enabled', '__return_false' );
 	}
 
 	public static function get_connect(): Facade {

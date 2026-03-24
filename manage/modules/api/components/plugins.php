@@ -34,6 +34,13 @@ class Plugins extends Route {
 						return 'slug' === $type ? sanitize_text_field( $value ) : esc_url_raw( $value );
 					},
 				],
+				'activate' => [
+					'required' => false,
+					'type' => 'boolean',
+					'default' => false,
+					'description' => 'If true, activate the plugin after a successful install.',
+					'sanitize_callback' => 'rest_sanitize_boolean',
+				],
 			],
 		] );
 
@@ -294,10 +301,17 @@ class Plugins extends Route {
 			);
 		}
 
-		return rest_ensure_response( [
+		$response_payload = [
 			'status' => 'success',
 			'message' => 'Plugin installed successfully.',
-		] );
+		];
+
+		if ( $request->get_param( 'activate' ) ) {
+			$activation_result = $this->activate_installed_plugin( $file, false );
+			$response_payload['activated'] = ! is_wp_error( $activation_result );
+		}
+
+		return rest_ensure_response( $response_payload );
 	}
 
 	private function get_package_url_from_plugin_url( string $plugin_url ) {
@@ -343,12 +357,25 @@ class Plugins extends Route {
 
 	public function activate_plugin( $request ) {
 		$plugin_slug = $request->get_param( 'slug' );
-		$network_activate = $request->get_param( 'network_activate' );
+		$network_activate = (bool) $request->get_param( 'network_activate' );
 
 		if ( empty( $plugin_slug ) ) {
 			return new \WP_Error( 'missing_slug', 'Plugin slug is required.', [ 'status' => \WP_Http::BAD_REQUEST ] );
 		}
 
+		$result = $this->activate_installed_plugin( $plugin_slug, $network_activate );
+
+		if ( is_wp_error( $result ) ) {
+			return $result;
+		}
+
+		return rest_ensure_response( [
+			'status' => 'success',
+			'message' => 'Plugin activated successfully.',
+		] );
+	}
+
+	private function activate_installed_plugin( string $plugin_slug, bool $network_activate ) {
 		require_once ABSPATH . 'wp-admin/includes/plugin.php';
 
 		$plugin_data = $this->get_plugin_data( $plugin_slug );
@@ -369,10 +396,7 @@ class Plugins extends Route {
 			return $activated;
 		}
 
-		return rest_ensure_response( [
-			'status' => 'success',
-			'message' => 'Plugin activated successfully.',
-		] );
+		return true;
 	}
 
 	private function get_plugin_data( $plugin_slug ) {
