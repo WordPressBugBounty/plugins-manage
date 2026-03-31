@@ -30,6 +30,9 @@ class Module extends Module_Base {
 		add_action( 'elementor_one/manage_connected', [ $this, 'on_connect' ] );
 		add_action( 'elementor_one/manage_migration_run', [ $this, 'on_migration_run' ] );
 
+		// Disable license check for Manage (Free version)
+		add_filter( 'elementor_one/' . Config::APP_PREFIX . '_license_check_enabled', '__return_false' );
+
 		Facade::make( [
 			'app_name' => Config::APP_NAME,
 			'app_prefix' => Config::APP_PREFIX,
@@ -42,9 +45,6 @@ class Module extends Module_Base {
 			'connect_mode' => Config::CONNECT_MODE,
 			'plugin_slug' => Config::PLUGIN_SLUG,
 		] );
-
-		// Disable license check for Manage (Free version)
-		add_filter( 'elementor_one/' . Config::APP_PREFIX . '_license_check_enabled', '__return_false' );
 	}
 
 	public static function get_connect(): Facade {

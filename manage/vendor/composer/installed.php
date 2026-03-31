@@ -3,7 +3,7 @@
         'name' => 'elementor/manage',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => 'a0887a0c1f85fcf532a6daa10bb348f64676b675',
+        'reference' => '4cadf9adc8c8a6d29078fc7a591d14a966481920',
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -13,7 +13,7 @@
         'elementor/manage' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => 'a0887a0c1f85fcf532a6daa10bb348f64676b675',
+            'reference' => '4cadf9adc8c8a6d29078fc7a591d14a966481920',
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
@@ -29,8 +29,8 @@
             'dev_requirement' => false,
         ),
         'elementor/wp-one-package' => array(
-            'pretty_version' => '1.0.58',
-            'version' => '1.0.58.0',
+            'pretty_version' => '1.0.59',
+            'version' => '1.0.59.0',
             'reference' => null,
             'type' => 'library',
             'install_path' => __DIR__ . '/../elementor/wp-one-package',

@@ -24,7 +24,7 @@ abstract class Route {
 			return true;
 		}
 
-		$auth_header = $request->get_header( 'authorization' );
+		$auth_header = $this->get_authorization_header( $request );
 
 		if ( ! $auth_header ) {
 			return new \WP_Error( 'no_auth_header', 'Authorization header missing.', [ 'status' => \WP_Http::UNAUTHORIZED ] );
@@ -60,6 +60,29 @@ abstract class Route {
 		wp_set_current_user( $system_user->ID );
 
 		return true;
+	}
+
+	private function get_authorization_header( \WP_REST_Request $request ): string {
+		$auth_header = $request->get_header( 'authorization' );
+
+		if ( $auth_header ) {
+			return $auth_header;
+		}
+
+		/*
+		 * WP_REST_Server::get_headers() already handles HTTP_AUTHORIZATION and
+		 * REDIRECT_HTTP_AUTHORIZATION, but getallheaders() can still surface the
+		 * header on servers where neither $_SERVER key is populated.
+		 */
+		if ( function_exists( 'getallheaders' ) ) {
+			foreach ( getallheaders() as $name => $value ) {
+				if ( strcasecmp( $name, 'authorization' ) === 0 ) {
+					return sanitize_text_field( $value );
+				}
+			}
+		}
+
+		return '';
 	}
 
 	private function is_authentication_skipped(): bool {
