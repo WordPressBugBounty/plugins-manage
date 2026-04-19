@@ -154,7 +154,7 @@ class Client {
 		$home_url = trailingslashit( home_url() );
 
 		return self::get_instance()->make_request( 'POST', 'sites', [
-			'rest_url' => $home_url . rest_get_url_prefix() . '/manage/v1',
+			'rest_url' => get_rest_url( null, 'manage/v1' ),
 			'home_url' => $home_url,
 		] );
 	}

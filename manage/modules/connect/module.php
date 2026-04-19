@@ -29,6 +29,7 @@ class Module extends Module_Base {
 	public function __construct() {
 		add_action( 'elementor_one/manage_connected', [ $this, 'on_connect' ] );
 		add_action( 'elementor_one/manage_migration_run', [ $this, 'on_migration_run' ] );
+		add_action( 'permalink_structure_changed', [ $this, 'on_permalink_structure_changed' ], 10, 0 );
 
 		// Disable license check for Manage (Free version)
 		add_filter( 'elementor_one/' . Config::APP_PREFIX . '_license_check_enabled', '__return_false' );
@@ -80,6 +81,17 @@ class Module extends Module_Base {
 		$site_registered = Client::register_website();
 		if ( is_wp_error( $site_registered ) ) {
 			Logger::error( 'Failed to register website on migration run: ' . esc_html( $site_registered->get_error_message() ) );
+		}
+	}
+
+	public function on_permalink_structure_changed() {
+		if ( ! static::is_connected() ) {
+			return;
+		}
+
+		$site_registered = Client::register_website();
+		if ( is_wp_error( $site_registered ) ) {
+			Logger::error( 'Failed to re-register website after permalink change: ' . esc_html( $site_registered->get_error_message() ) );
 		}
 	}
 
