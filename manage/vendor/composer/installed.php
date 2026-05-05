@@ -3,7 +3,7 @@
         'name' => 'elementor/manage',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => 'da16700c1ef5b3d518f9dd0d3504da3990c4f353',
+        'reference' => '725cf56b635fe7875a88fceedcdb19b2ebe45023',
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -13,7 +13,7 @@
         'elementor/manage' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => 'da16700c1ef5b3d518f9dd0d3504da3990c4f353',
+            'reference' => '725cf56b635fe7875a88fceedcdb19b2ebe45023',
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),

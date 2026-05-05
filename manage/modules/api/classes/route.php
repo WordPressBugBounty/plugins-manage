@@ -63,10 +63,18 @@ abstract class Route {
 	}
 
 	private function get_authorization_header( \WP_REST_Request $request ): string {
-		$auth_header = $request->get_header( 'authorization' );
+		/*
+		 * Some hosts/proxies (CDN/WAF, FastCGI, mod_security) strip the standard
+		 * Authorization header before it reaches PHP. eis-manage sends the same
+		 * Bearer token under X-Manage-Authorization as a fallback. Standard
+		 * Authorization is preferred when both are present.
+		 */
+		foreach ( [ 'authorization', 'x-manage-authorization' ] as $header_name ) {
+			$value = $request->get_header( $header_name );
 
-		if ( $auth_header ) {
-			return $auth_header;
+			if ( $value ) {
+				return $value;
+			}
 		}
 
 		/*
@@ -76,7 +84,10 @@ abstract class Route {
 		 */
 		if ( function_exists( 'getallheaders' ) ) {
 			foreach ( getallheaders() as $name => $value ) {
-				if ( strcasecmp( $name, 'authorization' ) === 0 ) {
+				if (
+					strcasecmp( $name, 'authorization' ) === 0 ||
+					strcasecmp( $name, 'x-manage-authorization' ) === 0
+				) {
 					return sanitize_text_field( $value );
 				}
 			}
