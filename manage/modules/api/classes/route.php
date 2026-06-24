@@ -1,7 +1,7 @@
 <?php
 namespace Manage\Modules\Api\Classes;
 
-use Manage\Classes\Client;
+use Manage\Classes\Manage_Client;
 use Manage\Classes\Jwks_Decoder;
 use Manage\Classes\System_User;
 
@@ -41,7 +41,7 @@ abstract class Route {
 			return new \WP_Error( $jwt_payload->get_error_code(), $jwt_payload->get_error_message(), [ 'status' => \WP_Http::FORBIDDEN ] );
 		}
 
-		if ( empty( $jwt_payload['sub'] ) || Client::get_client_id() !== $jwt_payload['sub'] ) {
+		if ( empty( $jwt_payload['sub'] ) || Manage_Client::get_client_id() !== $jwt_payload['sub'] ) {
 			return new \WP_Error( 'invalid_site_id', 'Invalid site ID in token.', [ 'status' => \WP_Http::FORBIDDEN ] );
 		}
 

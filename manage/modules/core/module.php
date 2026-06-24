@@ -47,6 +47,7 @@ class Module extends Module_Base {
 		$this->register_components( [
 			'Not_Connected',
 			'Pointers',
+			'Dashboard_Widget',
 		] );
 
 		add_filter( 'plugin_action_links', [ $this, 'add_plugin_links' ], 10, 2 );

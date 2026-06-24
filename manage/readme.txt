@@ -3,7 +3,7 @@ Contributors: elemntor
 Tags: elementor, monitoring, performance, updates, bulk
 Requires at least: 6.6
 Tested up to: 6.9
-Stable tag: 1.0.6
+Stable tag: 1.0.7
 Requires PHP: 7.4
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -82,6 +82,8 @@ For single-site owners, it provides continuous visibility into performance, acce
 
 Manage centralizes operations for everyone. Run bulk plugin, theme, and WordPress updates, detect security risks, track performance history, and use built-in rollback protection to update WordPress sites with confidence.
 
+Manage creates an admin WordPress user to operate remotely
+
 = Why should I use Manage instead of handling sites individually? =
 
 Manually switching between WordPress dashboards, updating plugins one by one, and tracking site health separately increases the risk of issues falling between the cracks and wastes valuable time.
@@ -106,6 +108,9 @@ Premium features such as bulk updates, automatic scans, and database optimizatio
 2. Manage - Bulk Update Panel
 
 == Changelog ==
+
+= 1.0.7 =
+* Tweak: Added a new Manage admin dashboard widget.
 
 = 1.0.6 =
 * Tweak: Clear notice when a site fails to sync, with guidance on common connection issues.

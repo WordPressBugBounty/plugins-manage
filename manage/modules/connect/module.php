@@ -2,7 +2,7 @@
 namespace Manage\Modules\Connect;
 
 use ElementorOne\Connect\Facade;
-use Manage\Classes\Client;
+use Manage\Classes\Manage_Client;
 use Manage\Classes\Logger;
 use Manage\Classes\Module_Base;
 use Manage\Classes\System_User;
@@ -58,7 +58,7 @@ class Module extends Module_Base {
 			Logger::error( 'Failed to autofix system user on connection: ' . esc_html( $system_user->get_error_message() ) );
 		}
 
-		$site_registered = Client::register_website();
+		$site_registered = Manage_Client::register_website();
 		if ( is_wp_error( $site_registered ) ) {
 			Logger::error( 'Failed to register website: ' . esc_html( $site_registered->get_error_message() ) );
 		}
@@ -78,7 +78,7 @@ class Module extends Module_Base {
 			Logger::error( 'Failed to autofix system user on migration run: ' . esc_html( $system_user->get_error_message() ) );
 		}
 
-		$site_registered = Client::register_website();
+		$site_registered = Manage_Client::register_website();
 		if ( is_wp_error( $site_registered ) ) {
 			Logger::error( 'Failed to register website on migration run: ' . esc_html( $site_registered->get_error_message() ) );
 		}
@@ -89,7 +89,7 @@ class Module extends Module_Base {
 			return;
 		}
 
-		$site_registered = Client::register_website();
+		$site_registered = Manage_Client::register_website();
 		if ( is_wp_error( $site_registered ) ) {
 			Logger::error( 'Failed to re-register website after permalink change: ' . esc_html( $site_registered->get_error_message() ) );
 		}

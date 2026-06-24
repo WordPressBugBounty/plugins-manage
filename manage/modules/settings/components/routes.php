@@ -1,7 +1,8 @@
 <?php
 namespace Manage\Modules\Settings\Components;
 
-use Manage\Classes\Client;
+use Manage\Classes\Manage_Client;
+use Manage\Classes\Dashboard_Widget_Data;
 use Manage\Classes\System_User;
 use Manage\Classes\Utils;
 use Manage\Modules\Connect\Module as Connect;
@@ -36,6 +37,44 @@ class Routes {
 			'permission_callback' => [ Utils::class, 'user_is_admin' ],
 			'callback' => [ $this, 'get_settings' ],
 		] );
+
+		register_rest_route( static::REST_NAMESPACE, '/dashboard-widget', [
+			'methods' => 'GET',
+			'permission_callback' => [ $this, 'dashboard_widget_permission' ],
+			'callback' => [ $this, 'get_dashboard_widget' ],
+		] );
+
+		register_rest_route( static::REST_NAMESPACE, '/dashboard-widget/performance', [
+			'methods' => 'GET',
+			'permission_callback' => [ $this, 'dashboard_widget_permission' ],
+			'callback' => [ $this, 'get_dashboard_widget_performance' ],
+		] );
+	}
+
+	public function dashboard_widget_permission(): bool {
+		if ( ! Utils::user_is_admin() ) {
+			return false;
+		}
+
+		return Connect::is_connected();
+	}
+
+	public function get_dashboard_widget() {
+		$aggregator = new Dashboard_Widget_Data();
+
+		return rest_ensure_response( [
+			'status' => 'success',
+			'data' => $aggregator->get_all(),
+		] );
+	}
+
+	public function get_dashboard_widget_performance() {
+		$aggregator = new Dashboard_Widget_Data();
+
+		return rest_ensure_response( [
+			'status' => 'success',
+			'data' => $aggregator->get_performance_summary(),
+		] );
 	}
 
 	public function generate_system_user() {
@@ -62,7 +101,7 @@ class Routes {
 		}
 
 		try {
-			$response = Client::register_website();
+			$response = Manage_Client::register_website();
 		} catch ( \Throwable $t ) {
 			return new \WP_Error(
 				'register_website_failed',
