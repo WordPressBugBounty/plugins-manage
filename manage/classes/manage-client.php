@@ -90,4 +90,8 @@ class Manage_Client extends Platform_Client {
 			'home_url' => $home_url,
 		] );
 	}
+
+	public static function sync_website() {
+		return self::get_instance()->make_request( 'POST', 'sites/sync' );
+	}
 }

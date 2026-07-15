@@ -15,6 +15,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class Module extends Module_Base {
 
+	private static bool $sync_scheduled_after_upgrade = false;
+
 	public function get_name(): string {
 		return 'connect';
 	}
@@ -30,6 +32,7 @@ class Module extends Module_Base {
 		add_action( 'elementor_one/manage_connected', [ $this, 'on_connect' ] );
 		add_action( 'elementor_one/manage_migration_run', [ $this, 'on_migration_run' ] );
 		add_action( 'permalink_structure_changed', [ $this, 'on_permalink_structure_changed' ], 10, 0 );
+		add_action( 'upgrader_process_complete', [ $this, 'on_upgrader_process_complete' ], 10, 2 );
 
 		// Disable license check for Manage (Free version)
 		add_filter( 'elementor_one/' . Config::APP_PREFIX . '_license_check_enabled', '__return_false' );
@@ -92,6 +95,55 @@ class Module extends Module_Base {
 		$site_registered = Manage_Client::register_website();
 		if ( is_wp_error( $site_registered ) ) {
 			Logger::error( 'Failed to re-register website after permalink change: ' . esc_html( $site_registered->get_error_message() ) );
+		}
+	}
+
+	/**
+	 * `upgrader_process_complete` can fire multiple times within a single
+	 * request — not just for manual bulk-selects (WP core coalesces those
+	 * into a single firing after the whole batch), but also for WP-Cron
+	 * auto-updates, which loop over plugins/themes/core one at a time and
+	 * fire the hook after EACH item within the same request.
+	 *
+	 * Any `update` action is synced (plugin, theme, or core) EXCEPT
+	 * translation/language-pack updates, which don't affect the site
+	 * state we report on.
+	 *
+	 * The actual sync is deferred to `shutdown` (scheduled at most once,
+	 * guarded by the static flag) rather than fired inline here. Since
+	 * `shutdown` only runs after every line of PHP for the request has
+	 * executed, this guarantees the outbound sync is triggered only after
+	 * the ENTIRE batch of updates has finished — not after just the first
+	 * item — so the eventual async site-state fetch never races a
+	 * still-in-progress update.
+	 */
+	public function on_upgrader_process_complete( $upgrader, $hook_extra ) {
+		if ( ! isset( $hook_extra['action'] ) || 'update' !== $hook_extra['action'] ) {
+			return;
+		}
+
+		// Translation/language-pack updates don't change site state we report on, so skip syncing for those.
+		if ( isset( $hook_extra['type'] ) && 'translation' === $hook_extra['type'] ) {
+			return;
+		}
+
+		if ( ! static::is_connected() ) {
+			return;
+		}
+
+		if ( static::$sync_scheduled_after_upgrade ) {
+			return;
+		}
+
+		static::$sync_scheduled_after_upgrade = true;
+
+		add_action( 'shutdown', [ $this, 'sync_website_on_shutdown' ] );
+	}
+
+	public function sync_website_on_shutdown() {
+		$site_synced = Manage_Client::sync_website();
+		if ( is_wp_error( $site_synced ) ) {
+			Logger::error( 'Failed to sync website after upgrade: ' . esc_html( $site_synced->get_error_message() ) );
 		}
 	}
 
