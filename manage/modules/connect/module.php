@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class Module extends Module_Base {
 
-	private static bool $sync_scheduled_after_upgrade = false;
+	private static bool $sync_scheduled = false;
 
 	public function get_name(): string {
 		return 'connect';
@@ -33,6 +33,9 @@ class Module extends Module_Base {
 		add_action( 'elementor_one/manage_migration_run', [ $this, 'on_migration_run' ] );
 		add_action( 'permalink_structure_changed', [ $this, 'on_permalink_structure_changed' ], 10, 0 );
 		add_action( 'upgrader_process_complete', [ $this, 'on_upgrader_process_complete' ], 10, 2 );
+		add_action( 'activated_plugin', [ $this, 'on_activated_plugin' ] );
+		add_action( 'deactivated_plugin', [ $this, 'on_deactivated_plugin' ] );
+		add_action( 'switch_theme', [ $this, 'on_switch_theme' ] );
 
 		// Disable license check for Manage (Free version)
 		add_filter( 'elementor_one/' . Config::APP_PREFIX . '_license_check_enabled', '__return_false' );
@@ -105,37 +108,69 @@ class Module extends Module_Base {
 	 * auto-updates, which loop over plugins/themes/core one at a time and
 	 * fire the hook after EACH item within the same request.
 	 *
-	 * Any `update` action is synced (plugin, theme, or core) EXCEPT
-	 * translation/language-pack updates, which don't affect the site
-	 * state we report on.
+	 * Both `update` and `install` actions are synced (plugin, theme, or
+	 * core) EXCEPT translation/language-pack updates or installs, which
+	 * don't affect the site state we report on.
 	 *
 	 * The actual sync is deferred to `shutdown` (scheduled at most once,
 	 * guarded by the static flag) rather than fired inline here. Since
 	 * `shutdown` only runs after every line of PHP for the request has
 	 * executed, this guarantees the outbound sync is triggered only after
-	 * the ENTIRE batch of updates has finished — not after just the first
-	 * item — so the eventual async site-state fetch never races a
-	 * still-in-progress update.
+	 * the ENTIRE batch of updates/installs has finished — not after just
+	 * the first item — so the eventual async site-state fetch never races
+	 * a still-in-progress update.
 	 */
 	public function on_upgrader_process_complete( $upgrader, $hook_extra ) {
-		if ( ! isset( $hook_extra['action'] ) || 'update' !== $hook_extra['action'] ) {
+		if ( ! isset( $hook_extra['action'] ) || ! in_array( $hook_extra['action'], [ 'update', 'install' ], true ) ) {
 			return;
 		}
 
-		// Translation/language-pack updates don't change site state we report on, so skip syncing for those.
+		// Translation/language-pack updates or installs don't change site state we report on, so skip syncing for those.
 		if ( isset( $hook_extra['type'] ) && 'translation' === $hook_extra['type'] ) {
 			return;
 		}
 
+		$this->schedule_sync_after_site_change();
+	}
+
+	/**
+	 * Activating a plugin changes the site state we report on (active
+	 * plugin list), so re-sync just like an update/install. Shares the
+	 * same dedup flag and shutdown deferral as `on_upgrader_process_complete()`
+	 * so a bulk-activate, or an activation happening in the same request
+	 * as an update/install, still only triggers a single outbound sync.
+	 */
+	public function on_activated_plugin() {
+		$this->schedule_sync_after_site_change();
+	}
+
+	/**
+	 * Deactivating a plugin changes the site state we report on (active
+	 * plugin list) just as much as activating one does, so it shares the
+	 * same sync mechanism for symmetry.
+	 */
+	public function on_deactivated_plugin() {
+		$this->schedule_sync_after_site_change();
+	}
+
+	/**
+	 * Switching the active theme changes the site state we report on,
+	 * so re-sync using the same shared, deduped mechanism.
+	 */
+	public function on_switch_theme() {
+		$this->schedule_sync_after_site_change();
+	}
+
+	private function schedule_sync_after_site_change() {
 		if ( ! static::is_connected() ) {
 			return;
 		}
 
-		if ( static::$sync_scheduled_after_upgrade ) {
+		if ( static::$sync_scheduled ) {
 			return;
 		}
 
-		static::$sync_scheduled_after_upgrade = true;
+		static::$sync_scheduled = true;
 
 		add_action( 'shutdown', [ $this, 'sync_website_on_shutdown' ] );
 	}

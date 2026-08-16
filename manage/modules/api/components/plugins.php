@@ -686,24 +686,10 @@ class Plugins extends Route {
 			);
 		}
 
-		$was_active = is_plugin_active( $plugin_slug );
-		$was_network_active = is_multisite() && is_plugin_active_for_network( $plugin_slug );
-
-		if ( $was_active || $was_network_active ) {
-			deactivate_plugins( $plugin_slug, false, $was_network_active );
-		}
-
+		// Match wp_ajax_update_plugin(): bulk_upgrade does not deactivate active plugins.
 		$skin = new \WP_Ajax_Upgrader_Skin();
 		$upgrader = new \Plugin_Upgrader( $skin );
-		$result = $upgrader->upgrade( $plugin_slug );
-
-		if ( is_wp_error( $result ) ) {
-			return new \WP_Error(
-				'update_failed',
-				'Failed to update plugin: ' . $result->get_error_message(),
-				[ 'status' => \WP_Http::INTERNAL_SERVER_ERROR ]
-			);
-		}
+		$result = $upgrader->bulk_upgrade( [ $plugin_slug ] );
 
 		if ( is_wp_error( $skin->result ) ) {
 			return new \WP_Error(
@@ -721,16 +707,38 @@ class Plugins extends Route {
 			);
 		}
 
-		if ( ! $result ) {
+		if ( false === $result ) {
+			return new \WP_Error(
+				'update_failed',
+				'Failed to update plugin: unable to connect to the filesystem.',
+				[ 'status' => \WP_Http::INTERNAL_SERVER_ERROR ]
+			);
+		}
+
+		$plugin_result = $result[ $plugin_slug ] ?? null;
+
+		if ( is_wp_error( $plugin_result ) ) {
+			return new \WP_Error(
+				'update_failed',
+				'Failed to update plugin: ' . $plugin_result->get_error_message(),
+				[ 'status' => \WP_Http::INTERNAL_SERVER_ERROR ]
+			);
+		}
+
+		if ( true === $plugin_result ) {
+			return new \WP_Error(
+				'no_update_available',
+				'No update available for this plugin.',
+				[ 'status' => \WP_Http::BAD_REQUEST ]
+			);
+		}
+
+		if ( empty( $plugin_result ) ) {
 			return new \WP_Error(
 				'update_failed',
 				'Failed to update plugin for an unknown reason.',
 				[ 'status' => \WP_Http::INTERNAL_SERVER_ERROR ]
 			);
-		}
-
-		if ( $was_active || $was_network_active ) {
-			activate_plugin( $plugin_slug, '', $was_network_active );
 		}
 
 		$plugin_data = $this->get_plugin_data( $plugin_slug );
