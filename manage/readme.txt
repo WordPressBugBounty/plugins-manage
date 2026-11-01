@@ -3,7 +3,7 @@ Contributors: elemntor
 Tags: elementor, monitoring, performance, updates, bulk
 Requires at least: 6.6
 Tested up to: 6.9
-Stable tag: 1.0.11
+Stable tag: 1.0.12
 Requires PHP: 7.4
 License: GPLv3
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -108,6 +108,9 @@ Premium features such as bulk updates, automatic scans, and database optimizatio
 2. Manage - Bulk Update Panel
 
 == Changelog ==
+
+= 1.0.12 =
+* Tweak: Prevented plugins from being deactivated after a rollback.
 
 = 1.0.11 =
 * Tweak: Improved display of HTML error messages in the Manage admin dashboard widget.
